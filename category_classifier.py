@@ -1,52 +1,54 @@
-from sentence_transformers import SentenceTransformer, util
+import os
+from groq import Groq
 
-#loading a small embedding model 
-model = SentenceTransformer("all-MiniLM-L6-v2")
+CATEGORIES = [
+    "sleep",
+    "study",
+    "exercise",
+    "eating",
+    "self-care",
+    "leisure-positive",
+    "leisure-negative",
+    "social",
+]
 
-# define  categories and  example phrases for each
-CATEGORY_EXAMPLES = {
-    "sleep": [
-        "sleep", "nap", "rest", "went to bed", "slept early", "slept late"
-    ],
-    "study": [
-        "studied", "read textbook", "homework", "coding", "lecture notes", "learning", "course"
-    ],
-    "exercise": [   
-        "gym", "workout", "running", "dance practice", "sports", "yoga", "walk"
-    ],
-    "eating": [
-        "breakfast", "lunch", "dinner", "ate", "snack", "food"
-    ],
-    "self-care": [
-        "shower", "skincare", "meditation", "cleaning room"
-    ],
-    "leisure-positive": [
-        "played guitar", "learned new skill", "creative hobby", "painting", "writing"
-    ],
-    "leisure-negative": [
-        "scrolled on phone", "tiktok", "instagram", "doomscrolling", "mindless youtube", "Scrolling"
-    ],
-    "social": [
-        "hung out", "talk" ,"friends", "call parents", "went out"
-    ]
-}
+CATEGORY_DESCRIPTIONS = """
+- sleep: sleeping, napping, resting
+- study: studying, homework, coding, reading for learning, lectures, courses
+- exercise: gym, workout, running, sports, yoga, walking, dance
+- eating: any meal, snack, food, coffee
+- self-care: shower, skincare, meditation, cleaning, personal errands, chores
+- leisure-positive: creative hobbies, reading for fun, playing music, painting, journaling
+- leisure-negative: doom scrolling, tiktok, instagram, mindless youtube, passive phone use
+- social: hanging out with friends, calls with family, going out, socializing
+"""
 
-example_embeddings = []
-example_labels = []
 
-for category, phrases in CATEGORY_EXAMPLES.items():
-    for p in phrases:
-        example_embeddings.append(p)
-        example_labels.append(category)
+def classify_activity(text: str, groq_client: Groq = None) -> str:
+    if groq_client is None:
+        groq_client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 
-example_embeddings = model.encode(example_embeddings, convert_to_tensor=True)
+    prompt = f"""You are a time tracking classifier. Given an activity description, return exactly one category from the list below. Return only the category name, nothing else.
 
-def classify_activity(text: str) -> str:
-    
-    # Returns the best category for the given activity description
-    
-    input_emb = model.encode(text, convert_to_tensor=True)
-    sims = util.cos_sim(input_emb, example_embeddings)[0]
+Categories:
+{CATEGORY_DESCRIPTIONS}
 
-    best_index = sims.argmax().item()
-    return example_labels[best_index]
+Activity: "{text}"
+
+Return one of: {', '.join(CATEGORIES)}"""
+
+    response = groq_client.chat.completions.create(
+        model="llama3-8b-8192",
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0
+    )
+
+    result = response.choices[0].message.content.strip().lower()
+
+    # Validate the response is actually one of the categories
+    for cat in CATEGORIES:
+        if cat in result:
+            return cat
+
+    # Fallback if model returns something unexpected
+    return "self-care"

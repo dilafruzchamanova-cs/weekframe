@@ -12,6 +12,10 @@ env/
 
 # Personal data
 User_logs.json
+user_config.json
+
+# Environment variables (never commit real keys)
+.env
 
 # macOS
 .DS_Store
