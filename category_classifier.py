@@ -10,17 +10,25 @@ CATEGORIES = [
     "leisure-positive",
     "leisure-negative",
     "social",
+    "work",
+    "commute",
+    "chores",
+    "health",
 ]
 
 CATEGORY_DESCRIPTIONS = """
 - sleep: sleeping, napping, resting
-- study: studying, homework, coding, reading for learning, lectures, courses
+- study: studying, homework, coding, reading for learning, lectures, courses, university work
 - exercise: gym, workout, running, sports, yoga, walking, dance
 - eating: any meal, snack, food, coffee
-- self-care: shower, skincare, meditation, cleaning, personal errands, chores
-- leisure-positive: creative hobbies, reading for fun, playing music, painting, journaling
-- leisure-negative: doom scrolling, tiktok, instagram, mindless youtube, passive phone use
-- social: hanging out with friends, calls with family, going out, socializing
+- self-care: shower, skincare, meditation, journaling, personal grooming
+- leisure-positive: creative hobbies, reading for fun, playing music, painting, intentional entertainment
+- leisure-negative: doom scrolling, tiktok, instagram, mindless youtube, passive phone use, browsing aimlessly
+- social: hanging out with friends, calls with family, going out, socializing, parties
+- work: job, internship, freelance, professional tasks not related to studying
+- commute: travelling, driving, public transport, getting somewhere
+- chores: cleaning, errands, groceries, laundry, cooking, tidying
+- health: doctor, therapy, pharmacy, medical appointments
 """
 
 
@@ -38,7 +46,7 @@ Activity: "{text}"
 Return one of: {', '.join(CATEGORIES)}"""
 
     response = groq_client.chat.completions.create(
-        model="llama3-8b-8192",
+        model="llama-3.3-70b-versatile",
         messages=[{"role": "user", "content": prompt}],
         temperature=0
     )

@@ -1,4 +1,5 @@
 pandas>=2.0.0
-python-telegram-bot>=20.0
+matplotlib>=3.7.0
+python-telegram-bot[job-queue]>=20.0
 groq>=0.4.0
 python-dotenv>=1.0.0
